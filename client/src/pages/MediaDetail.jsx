@@ -1,9 +1,9 @@
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, Chip, Divider, Stack, Typography } from "@mui/material";
+
 import { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
@@ -29,6 +29,9 @@ import PosterSlide from "../components/common/PosterSlide";
 import RecommendSlide from "../components/common/RecommendSlide";
 import MediaSlide from "../components/common/MediaSlide";
 import MediaReview from "../components/common/MediaReview";
+
+// import emailjs from "@emailjs/browser";
+import emailjs from "emailjs-com";
 
 const MediaDetail = () => {
   const { mediaType, mediaId } = useParams();
@@ -77,7 +80,6 @@ const MediaDetail = () => {
     }
 
     setOnRequest(true);
-
     const body = {
       mediaId: media.id,
       mediaTitle: media.title || media.name,
@@ -98,6 +100,31 @@ const MediaDetail = () => {
     }
   };
 
+  const onPayClick = async () => {
+    if (!user) return dispatch(setAuthModalOpen(true));
+  };
+
+  const form = useRef();
+
+  const sendEmail = (e) => {
+    e.preventDefault(); // prevents the page from reloading when you hit “Send”
+    emailjs
+      .sendForm(
+        "service_yrtwoqd",
+        "template_9u7lpzf",
+        form.current,
+        "ianq_Ulidp_vjgKT4"
+      )
+      .then(
+        (result) => {
+          alert("check Email");
+          toast.success("Check Email");
+        },
+        (error) => {
+          console.log(error.text);
+        }
+      );
+  };
   const onRemoveFavorite = async () => {
     if (onRequest) return;
     setOnRequest(true);
@@ -183,7 +210,7 @@ const MediaDetail = () => {
                   {`${media.title || media.name} ${
                     mediaType === tmdbConfigs.mediaType.movie
                       ? media.release_date.split("-")[0]
-                      : media.first_air_date.split("-")[0]
+                      : ""
                   }`}
                 </Typography>
                 {/* title */}
@@ -191,7 +218,12 @@ const MediaDetail = () => {
                 {/* rate and genres */}
                 <Stack direction="row" spacing={1} alignItems="center">
                   {/* rate */}
-                  <CircularRate value={media.vote_average} />
+                  {mediaType === tmdbConfigs.mediaType.movie ? (
+                    <CircularRate value={media.vote_average} />
+                  ) : (
+                    " "
+                  )}
+
                   {/* rate */}
                   <Divider orientation="vertical" />
                   {/* genres */}
@@ -204,6 +236,12 @@ const MediaDetail = () => {
                     />
                   ))}
                   {/* genres */}
+                  {mediaType === tmdbConfigs.mediaType.movie ? (
+                    ""
+                  ) : (
+                    <div style={{ color: "red" }}>LIVE EVENT</div>
+                    // <Chip label="Live" variant="filled" color="error" />
+                  )}
                 </Stack>
                 {/* rate and genres */}
 
@@ -236,15 +274,42 @@ const MediaDetail = () => {
                     loading={onRequest}
                     onClick={onFavoriteClick}
                   />
-                  <Button
-                    variant="contained"
-                    sx={{ width: "max-content" }}
-                    size="large"
-                    startIcon={<PlayArrowIcon />}
-                    onClick={() => videoRef.current.scrollIntoView()}
-                  >
-                    watch now
-                  </Button>
+                  {mediaType === tmdbConfigs.mediaType.movie ? (
+                    <Button
+                      variant="contained"
+                      sx={{ width: "max-content" }}
+                      size="large"
+                      startIcon={<PlayArrowIcon />}
+                      onClick={() => videoRef.current.scrollIntoView()}
+                    >
+                      watch now
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      disableElevation
+                      startIcon={<PlayArrowIcon />}
+                      href={
+                        user
+                          ? "https://buy.stripe.com/test_aEU29B9PSfbfaGs289"
+                          : ""
+                      }
+                      // onClick={sendEmail}
+                      onClick={() => {
+                        onPayClick();
+                        sendEmail();
+                      }}
+                    >
+                      Pay to watch
+                    </Button>
+                  )}
+
+                  {/* <Button variant="contained" color="primary" disableElevation>
+                    {mediaType === tmdbConfigs.mediaType.movie
+                      ? "Movies"
+                      : "TV Series"}
+                  </Button> */}
                 </Stack>
                 {/* buttons */}
 
@@ -261,11 +326,18 @@ const MediaDetail = () => {
         {/* media content */}
 
         {/* media videos */}
-        <div ref={videoRef} style={{ paddingTop: "2rem" }}>
-          <Container header="Recorded Event">
-            <MediaVideosSlide videos={[...media.videos.results].splice(0, 1)} />
-          </Container>
-        </div>
+        {mediaType === tmdbConfigs.mediaType.movie ? (
+          <div ref={videoRef} style={{ paddingTop: "2rem" }}>
+            <Container header="Recorded Event">
+              <MediaVideosSlide
+                videos={[...media.videos.results].splice(0, 1)}
+              />
+            </Container>
+          </div>
+        ) : (
+          ""
+        )}
+
         {/* media videos */}
 
         {/* media backdrop */}

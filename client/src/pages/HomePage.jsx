@@ -7,6 +7,7 @@ import Container from "../components/common/Container";
 import MediaSlide from "../components/common/MediaSlide";
 
 const HomePage = () => {
+  console.log("hello");
   return (
     <>
       <HeroSlide
@@ -35,7 +36,6 @@ const HomePage = () => {
             mediaCategory={tmdbConfigs.mediaCategory.top_rated}
           />
         </Container>
-
         <Container header="live events">
           {/* <MediaSlide
             mediaType={tmdbConfigs.mediaType.tv}
